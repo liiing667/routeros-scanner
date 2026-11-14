@@ -1,0 +1,5 @@
+Flags: S - static
+Columns: NAME, TYPE, ADDRESS, TTL
+ 0   name="www.example.com" type=A address=93.184.216.34 ttl=23h59m59s
+ 1 S name="static.example.com" type=A address=192.0.2.1 ttl=1d
+ 2   name="poisoned.example.com" type=A address=6.6.6.6 ttl=4d2h

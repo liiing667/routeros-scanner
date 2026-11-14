@@ -32,12 +32,24 @@ This tool requires Python 3.8 or later.
 `-J`	   | Print the results as json format (prints txt format by default)	           | Optional
 `-concise` | Print a shortened text output focusing on recommendations and suspicious data | Optional
 `-update`  | Update the CVE Json file (the file is updated automatically if it hasn't been updated in the last month)| Optional
+`--export` | Offline mode: path to a RouterOS `/export` text file (no SSH connection is made; `-i`/`-u` are not required) | Optional
+`--dns-cache` | Offline mode: path to the saved output of `/ip dns cache print detail` | Optional
 
 ### Executing examples:
 	 ./main.py -i 192.168.88.1 -u admin
 	 ./main.py -i 192.168.88.1 -p 22 -u admin
 	 ./main.py -i 192.168.88.1 -p 2000 -u admin -ps 123456
 	 ./main.py -i 192.168.88.1 -p 2000 -u admin -ps 123456 -J
+	 ./main.py --export routeros_export.txt --dns-cache dns_cache.txt
+	 ./main.py --export routeros_export.txt -J
+
+### Offline mode:
+When a live SSH connection is not possible (e.g. an incident response team can only collect text output on site),
+the scanner can analyze a saved RouterOS `/export` file together with the output of `/ip dns cache print detail`.
+Offline mode reuses the same checks for version, scheduler, firewall NAT, DNS cache, users and ports, and produces
+the same raw/suspicious/recommendation output structure. Sections that are missing from the provided files
+(and checks that require live SSH data: files, proxy, socks, firewall rules) are skipped and marked with a
+`skipped` note, while the remaining checks still run (partial success).
 
 ### Output:
 The output includes 3 sections for each test:

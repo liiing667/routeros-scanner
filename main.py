@@ -21,6 +21,7 @@ from commands.socks import Socks
 from commands.users import Users
 from commands.version import Version
 import query_nvd
+import offline
 
 CVES_PATH = './assets/mikrotik_cpe_match.json'
 
@@ -31,6 +32,15 @@ def main(args):
 
     if args.update or is_cves_file_updated():
         update_cves()
+
+    if args.export:
+        print(f'** Offline analysis of export file: {args.export}\n')
+        all_data = offline.run_offline(args.export, args.dns_cache)
+        if args.J:
+            print(json.dumps(all_data, indent=4))
+        else:
+            print_txt_results(all_data, args.concise)
+        return
 
     print(f'** Mikrotik ip address: {args.ip}\n')
 
@@ -50,10 +60,11 @@ def main(args):
 
 def print_txt_results(res, concise):
     for command in res:
-        if (not concise and res[command]["raw_data"]) or res[command]["recommendation"] or res[command]["suspicious"]:
+        if (not concise and res[command]["raw_data"]) or res[command]["recommendation"] or res[command]["suspicious"] \
+                or res[command].get("skipped"):
             print(f'{command}:')
             for item in res[command]:
-                if concise and item != "recommendation" and item != "suspicious":
+                if concise and item != "recommendation" and item != "suspicious" and item != "skipped":
                         continue
                 if res[command][item]:
                     print(f'\t{item}:')
@@ -109,13 +120,18 @@ def is_routeros_version(ver):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--ip', help='The tested Mikrotik IP address', required=True)
+    parser.add_argument('-i', '--ip', help='The tested Mikrotik IP address')
     parser.add_argument('-p', '--port', help='The tested Mikrotik SSH port', default='22')
-    parser.add_argument('-u', '--userName', help='User name with admin Permissions', required=True)
+    parser.add_argument('-u', '--userName', help='User name with admin Permissions')
     parser.add_argument('-ps', '--password', help='The password of the given user name', default='')
     parser.add_argument('-J', help='Print the results as json format', action='store_true')
     parser.add_argument('-concise', help='Print out only suspicious items and recommendations', action='store_true')
     parser.add_argument('-update', help='Update the CVE Json file', action='store_true')
+    parser.add_argument('--export', help='Offline mode: path to a RouterOS /export text file (no SSH connection is made)')
+    parser.add_argument('--dns-cache', help='Offline mode: path to the output of "/ip dns cache print detail"')
     args = parser.parse_args()
+
+    if not args.export and (not args.ip or not args.userName):
+        parser.error('-i/--ip and -u/--userName are required unless --export is used')
 
     main(args)

